@@ -1,4 +1,4 @@
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import dayjs from 'dayjs';
 
 const createOfferTemplate = (offers) => {
@@ -136,27 +136,15 @@ const createFormTemplate = (point) => {
   </li>`;
 };
 
-export default class CreatingFormView {
+export default class CreatingFormView extends AbstractView {
   #point = null;
-  #element = null;
 
   constructor(point) {
+    super();
     this.#point = point;
   }
 
   get template() {
     return createFormTemplate(this.#point);
-  }
-
-  get element() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
-    }
-
-    return this.#element;
-  }
-
-  removeElement() {
-    this.#element = null;
   }
 }

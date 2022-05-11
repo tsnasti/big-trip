@@ -5,8 +5,8 @@ import CreatingFormView from '../view/creating-form-view.js';
 import EditFormView from '../view/edit-form-view.js';
 import WaypointView from '../view/waypoint-view.js';
 import NoPointsView from '../view/no-points-view.js';
-import {render} from '../render.js';
-import {RenderPosition} from '../render.js';
+import {render, replace} from '../framework/render.js';
+import {RenderPosition} from '../framework/render.js';
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -30,32 +30,30 @@ export default class TripPresenter {
     const pointComponent = new WaypointView(point);
     const editPointComponent = new EditFormView(point);
 
-    const replaceElement = (container, oldElement, newElement) => {
-      container.replaceChild(oldElement.element, newElement.element);
+    const replaceElement = (oldElement, newElement) => {
+      replace(oldElement, newElement);
     };
 
     const onEscKeyDown = (evt) => {
       if (evt.key === 'Escape' || evt.key === 'Esc') {
         evt.preventDefault();
-        replaceElement(this.#tripContainer, pointComponent, editPointComponent);
+        replaceElement(pointComponent, editPointComponent);
         document.removeEventListener('keydown', onEscKeyDown);
       }
     };
 
-    pointComponent.element.querySelector('.event__rollup-btn').addEventListener('click', () => {
-      replaceElement(this.#tripContainer, editPointComponent, pointComponent);
+    pointComponent.setClickHandler(() => {
+      replaceElement(editPointComponent, pointComponent);
       document.addEventListener('keydown', onEscKeyDown);
     });
 
-    editPointComponent.element.querySelector('form').addEventListener('submit', (evt) => {
-      evt.preventDefault();
-      replaceElement(this.#tripContainer, pointComponent, editPointComponent);
+    editPointComponent.setFormSubmitHandler(() => {
+      replaceElement(pointComponent, editPointComponent);
       document.addEventListener('keydown', onEscKeyDown);
     });
 
-    editPointComponent.element.querySelector('.event__rollup-btn').addEventListener('click', (evt) => {
-      evt.preventDefault();
-      replaceElement(this.#tripContainer, pointComponent, editPointComponent);
+    editPointComponent.setFormClickHandler(() => {
+      replaceElement(pointComponent, editPointComponent);
       document.addEventListener('keydown', onEscKeyDown);
     });
 
@@ -63,8 +61,6 @@ export default class TripPresenter {
   };
 
   #renderPage = () => {
-    render(this.#headerContainer, this.#tripContainer, this.#pointModel);
-
     render(new FilterView(), this.#headerContainer, RenderPosition.AFTEREND);
 
     if (this.#eventPoints.length === 0 ) {
