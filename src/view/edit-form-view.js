@@ -152,16 +152,16 @@ export default class EditFormView extends AbstractView {
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this._callback.formSubmit();
+    this._callback.formSubmit(this.#point);
   };
 
   setFormClickHandler = (callback) => {
-    this._callback.click = callback;
+    this._callback.formClick = callback;
     this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#clickFormHandler);
   };
 
   #clickFormHandler = (evt) => {
     evt.preventDefault();
-    this._callback.click();
+    this._callback.formClick();
   };
 }
