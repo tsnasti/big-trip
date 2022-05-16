@@ -1,5 +1,6 @@
 import {getRandomInteger} from '../mock/util.js';
 import dayjs from 'dayjs';
+import {nanoid} from 'nanoid';
 
 const name = [
   'Chamonix',
@@ -67,14 +68,6 @@ const getRandomDate = () =>
     .set('minute', getRandomInteger(0, 59))
     .toDate();
 
-const idArray = [0];
-
-const getIdElement = () => {
-  const idElement = idArray[idArray.length - 1];
-  idArray.push(idElement + 1);
-  return idElement;
-};
-
 const createOffers = () => {
   const arrayOffers = [];
 
@@ -102,7 +95,7 @@ export const generateWaypoint = () => {
     dateFrom: getRandomDate(),
     dateTo: getRandomDate(),
     destination: getDestination(),
-    id: getIdElement(),
+    id: nanoid(),
     isFavorite: Boolean(getRandomInteger(0, 1)),
     offers: offers,
     type: offers.type
