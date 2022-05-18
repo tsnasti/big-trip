@@ -7,6 +7,10 @@ import {render} from '../framework/render.js';
 import {RenderPosition} from '../framework/render.js';
 import PointPresenter from '../presenter/point-presenter.js';
 import {updateItem} from '../mock/util.js';
+/* import {pointModel} from '../main.js';
+import {generateFilter} from '../mock/filter.js';
+
+const filters = generateFilter(pointModel.points); */
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -47,9 +51,9 @@ export default class TripPresenter {
     render(this.#infoComponent, this.#headerContainer, RenderPosition.BEFOREBEGIN);
   };
 
-  #renderFilter = () => {
+  /* #renderFilter = () => {
     render(this.#filterComponent, this.#headerContainer, RenderPosition.AFTEREND);
-  };
+  }; */
 
   #renderSort = () => {
     render(this.#sortComponent, this.#tripContainer);
@@ -76,7 +80,7 @@ export default class TripPresenter {
   };
 
   #renderPage = () => {
-    this.#renderFilter();
+    //this.#renderFilter();
 
     if (this.#eventPoints.length === 0 ) {
       this.#renderNoPoints();
