@@ -1,5 +1,4 @@
 import InfoView from '../view/info-view.js';
-import FilterView from '../view/filter-view.js';
 import SortView from '../view/sort-view.js';
 import CreatingFormView from '../view/creating-form-view.js';
 import NoPointsView from '../view/no-points-view.js';
@@ -7,10 +6,7 @@ import {render} from '../framework/render.js';
 import {RenderPosition} from '../framework/render.js';
 import PointPresenter from '../presenter/point-presenter.js';
 import {updateItem} from '../mock/util.js';
-/* import {pointModel} from '../main.js';
-import {generateFilter} from '../mock/filter.js';
-
-const filters = generateFilter(pointModel.points); */
+import {SortType, comparePrice, compareDuration} from '../utils/sort.js';
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -19,11 +15,13 @@ export default class TripPresenter {
   #eventPoints = null;
 
   #infoComponent = new InfoView();
-  #filterComponent = new FilterView();
   #sortComponent = new SortView();
   #noPointsComponent = new NoPointsView();
 
   #pointPresenter = new Map();
+
+  #currentSortType = SortType.DAY;
+  #sourcedPagePoints = [];
 
   constructor(headerContainer, tripContainer, PointModel) {
     this.#headerContainer = headerContainer;
@@ -33,6 +31,7 @@ export default class TripPresenter {
 
   init = () => {
     this.#eventPoints = [...this.#pointModel.points];
+    this.#sourcedPagePoints = [...this.#pointModel.points];
 
     this.#renderPage();
     window.console.log(this.#eventPoints);
@@ -45,18 +44,41 @@ export default class TripPresenter {
   #handlePointChange = (updatedPoint) => {
     updateItem(this.#eventPoints, updatedPoint);
     this.#pointPresenter.get(updatedPoint.id).init(updatedPoint);
+    this.#sourcedPagePoints = updateItem(this.#sourcedPagePoints, updatedPoint);
+  };
+
+  #sortPoints = (sortType) => {
+    switch (sortType) {
+      case SortType.TIME:
+        this.#eventPoints.sort(compareDuration);
+        break;
+      case SortType.PRICE:
+        this.#eventPoints.sort(comparePrice);
+        break;
+      default:
+        this.#eventPoints = [...this.#sourcedPagePoints];
+    }
+
+    this.#currentSortType = sortType;
+  };
+
+  #handleSortTypeChange = (sortType) => {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+
+    this.#sortPoints(sortType);
+    this.#clearPointsList();
+    this. #renderListPoints(this.#eventPoints);
   };
 
   #renderInfo = () => {
     render(this.#infoComponent, this.#headerContainer, RenderPosition.BEFOREBEGIN);
   };
 
-  /* #renderFilter = () => {
-    render(this.#filterComponent, this.#headerContainer, RenderPosition.AFTEREND);
-  }; */
-
   #renderSort = () => {
     render(this.#sortComponent, this.#tripContainer);
+    this.#sortComponent.setSortTypeChangeHandler(this.#handleSortTypeChange);
   };
 
   #renderCreatingForm = (point) => {
@@ -74,13 +96,18 @@ export default class TripPresenter {
     this.#pointPresenter.set(point.id, pointPresenter);
   };
 
+  #renderListPoints = (points) => {
+    for (let i = 0; i < points.length; i++) {
+      this.#renderPoint(points[i]);
+    }
+  };
+
   #clearPointsList = () => {
     this.#pointPresenter.forEach((presenter) => presenter.destroy());
     this.#pointPresenter.clear();
   };
 
   #renderPage = () => {
-    //this.#renderFilter();
 
     if (this.#eventPoints.length === 0 ) {
       this.#renderNoPoints();
@@ -89,10 +116,7 @@ export default class TripPresenter {
       this.#renderInfo();
       this.#renderSort();
       this.#renderCreatingForm(this.#eventPoints[0]);
-    }
-
-    for (let i = 0; i < this.#eventPoints.length; i++) {
-      this.#renderPoint(this.#eventPoints[i]);
+      this.#renderListPoints(this.#eventPoints);
     }
   };
 }
