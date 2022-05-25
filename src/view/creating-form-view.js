@@ -1,12 +1,13 @@
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import dayjs from 'dayjs';
+import {createOffer, getDestination} from '../mock/waypoint.js';
 
 const createOfferTemplate = (offers) => {
   const offerTemplate = [];
   offers.forEach((offer) => {
     offerTemplate.push(`<div class="event__offer-selector">
-    <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-1" type="checkbox" name="event-offer-luggage" checked>
-    <label class="event__offer-label" for="event-offer-luggage-1">
+    <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.id}" type="checkbox" name="event-offer-luggage" checked>
+    <label class="event__offer-label" for="event-offer-${offer.id}">
       <span class="event__offer-title">${offer.title}</span>
       &plus;&euro;&nbsp;
       <span class="event__offer-price">${offer.price}</span>
@@ -16,8 +17,25 @@ const createOfferTemplate = (offers) => {
   return offerTemplate.join(' ');
 };
 
+const createPicturesTemplate = (pictures) => {
+  const pictureTemplate = [];
+  pictures.forEach((picture) => {
+    pictureTemplate.push(`
+      <img class="event__photo" src="${picture.src}" alt="Event photo">`);
+  });
+  return pictureTemplate.join(' ');
+};
+
 const createFormTemplate = (point) => {
   const {offers, dateFrom, dateTo, destination, type} = point;
+
+  let visuallyHidden = '';
+
+  if (offers.offers.length !== 0) {
+    createOfferTemplate(offers.offers);
+  } else {
+    visuallyHidden = 'visually-hidden';
+  }
 
   return `<li class="trip-events__item">
     <form class="event event--edit" action="#" method="post">
@@ -113,7 +131,7 @@ const createFormTemplate = (point) => {
         <button class="event__reset-btn" type="reset">Cancel</button>
       </header>
       <section class="event__details">
-        <section class="event__section  event__section--offers">
+        <section class="event__section  event__section--offers ${visuallyHidden}">
           <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
           <div class="event__available-offers">
@@ -124,10 +142,9 @@ const createFormTemplate = (point) => {
         <section class="event__section  event__section--destination">
           <h3 class="event__section-title  event__section-title--destination">Destination</h3>
           <p class="event__destination-description">${destination.description}</p>
-
           <div class="event__photos-container">
             <div class="event__photos-tape">
-              <img class="event__photo" src="${destination.pictures[0].src}" alt="Event photo">
+              ${createPicturesTemplate(destination.pictures)}
             </div>
           </div>
         </section>
@@ -136,15 +153,62 @@ const createFormTemplate = (point) => {
   </li>`;
 };
 
-export default class CreatingFormView extends AbstractView {
-  #point = null;
-
+export default class CreatingFormView extends AbstractStatefulView {
   constructor(point) {
     super();
-    this.#point = point;
+    this._state = CreatingFormView.parsePointToState(point);
+    this.#setInnerHandlers();
   }
 
   get template() {
-    return createFormTemplate(this.#point);
+    return createFormTemplate(this._state);
   }
+
+  static parsePointToState = (point) => ({...point,});
+
+  static parseStateToPoint = (state) => {
+    const point = {...state};
+    return point;
+  };
+
+  reset = (point) => {
+    this.updateElement(
+      CreatingFormView.parsePointToState(point),
+    );
+  };
+
+  #offersTypeChangeHandler = (evt) => {
+    evt.target.type = 'event-type';
+    this.updateElement({
+      type: evt.target.value,
+      offers: createOffer(evt.target.value)
+    });
+  };
+
+  #destinationChangeInputHandler = (evt) => {
+    evt.preventDefault();
+    this._setState({
+      destination: getDestination(evt.target.value)
+    });
+  };
+
+  setCreatingFormSubmitHandler = (callback) => {
+    this._callback.creatingFormSubmit = callback;
+    this.element.querySelector('form').addEventListener('submit', this.#creatingFormSubmitHandler);
+  };
+
+  #creatingFormSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.creatingFormSubmit(CreatingFormView.parsePointToState(this._state));
+  };
+
+  #setInnerHandlers = () => {
+    this.element.querySelector('.event__type-list').addEventListener('change', this.#offersTypeChangeHandler);
+    this.element.querySelector('.event__input--destination').addEventListener('input', this.#destinationChangeInputHandler);
+  };
+
+  _restoreHandlers = () => {
+    this.#setInnerHandlers();
+    this.setCreatingFormSubmitHandler(this._callback.creatingFormSubmit);
+  };
 }
