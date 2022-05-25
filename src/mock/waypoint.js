@@ -8,16 +8,21 @@ const name = [
   'Geneva'
 ];
 
-const description = [
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-  'Cras aliquet varius magna, non porta ligula feugiat eget.',
-  'Fusce tristique felis at fermentum pharetra. Aliquam id orci ut lectus varius viverra.',
-  'Nullam nunc ex, convallis sed finibus eget, sollicitudin eget ante.',
-  'Phasellus eros mauris, condimentum sed nibh vitae, sodales efficitur ipsum. Sed blandit, eros vel aliquam faucibus, purus ex euismod diam, eu luctus nunc ante ut dui.',
-  'Sed sed nisi sed augue convallis suscipit in sed felis.',
-  'Aliquam erat volutpat.',
-  'Nunc fermentum tortor ac porta dapibus. In rutrum ac purus sit amet tempus.',
-];
+const nameToDescription = {
+  'Chamonix': [
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    'Cras aliquet varius magna, non porta ligula feugiat eget.',
+    'Fusce tristique felis at fermentum pharetra. Aliquam id orci ut lectus varius viverra.',
+    'Nullam nunc ex, convallis sed finibus eget, sollicitudin eget ante.',
+  ],
+  'Amsterdam': [
+    'Phasellus eros mauris, condimentum sed nibh vitae, sodales efficitur ipsum. Sed blandit, eros vel aliquam faucibus, purus ex euismod diam, eu luctus nunc ante ut dui.',
+    'Sed sed nisi sed augue convallis suscipit in sed felis.',
+    'Aliquam erat volutpat.',
+    'Nunc fermentum tortor ac porta dapibus. In rutrum ac purus sit amet tempus.',
+  ],
+  'Geneva': []
+};
 
 const types = [
   'taxi',
@@ -31,33 +36,39 @@ const types = [
   'restaurant',
 ];
 
-const offerTitles = [
-  'Add luggage',
-  'Switch to comfort class',
-  'Add meal',
-  'Choose seats',
-  'Order Uber',
-  'Switch to comfort',
-  'Rent a car',
-  'Add breakfast',
-  'Book tickets',
-  'Lunch in city'
-];
+const offersToTypes = {
+  'taxi': ['Switch to comfort', 'Order Uber', ],
+  'bus': ['Choose seats'],
+  'train': ['Choose seats', 'Switch to comfort class', 'Book tickets'],
+  'ship': ['Choose seats', 'Switch to comfort class', 'Book tickets', 'Add breakfast', 'Add meal'],
+  'drive': ['Rent a car'],
+  'flight': ['Choose seats', 'Add luggage', 'Switch to comfort class', 'Book tickets', 'Add breakfast', 'Add meal'],
+  'sightseeing': ['Book tickets', 'Lunch in city'],
+  'restaurant': [],
+  'check-in': []
+};
 
 const generateRandomIndex = (array) => {
   const randomIndex = getRandomInteger(0, array.length - 1);
   return array[randomIndex];
 };
 
-const getDestination = () => ({
-  description: description.slice(getRandomInteger(0, description.length - 1)),
-  name: generateRandomIndex(name),
-  pictures: [
-    {
+const generatePictures = () => {
+  const arrayPictures = [];
+
+  for (let i = 0; i < getRandomInteger(0, 3); i++) {
+    arrayPictures.push({
       src: `http://picsum.photos/248/152?r=${Math.random()}`,
       description: 'Chamonix parliament building',
-    }
-  ]
+    });
+  }
+  return arrayPictures;
+};
+
+export const getDestination = (nameOfDestination) => ({
+  name: nameOfDestination,
+  description: nameToDescription[nameOfDestination],
+  pictures: generatePictures(),
 });
 
 const getRandomDate = () =>
@@ -68,13 +79,13 @@ const getRandomDate = () =>
     .set('minute', getRandomInteger(0, 59))
     .toDate();
 
-const createOffers = () => {
+const createOffers = (type) => {
   const arrayOffers = [];
 
-  for (let i = 0; i < getRandomInteger(1, 5); i++) {
+  for (let i = 0; i < offersToTypes[type].length; i++) {
     arrayOffers.push({
       id: i,
-      title: generateRandomIndex(offerTitles),
+      title: offersToTypes[type][i],
       price: getRandomInteger(5, 200),
     });
   }
@@ -82,24 +93,25 @@ const createOffers = () => {
   return arrayOffers;
 };
 
-const createOffer = () => ({
-  type: generateRandomIndex(types),
-  offers: createOffers()
+export const createOffer = (type) => ({
+  type: type,
+  offers: createOffers(type),
 });
 
 export const generateWaypoint = () => {
 
-  const offers = createOffer();
   const point = {
     basePrice: getRandomInteger(0, 1000),
     dateFrom: getRandomDate(),
     dateTo: getRandomDate(),
-    destination: getDestination(),
+    destination: getDestination(generateRandomIndex(name)),
     id: nanoid(),
     isFavorite: Boolean(getRandomInteger(0, 1)),
-    offers: offers,
-    type: offers.type
+    offers: '',
+    type: generateRandomIndex(types),
   };
+
+  point.offers = createOffer(point.type);
 
   if (point.dateFrom > point.dateTo)
   {

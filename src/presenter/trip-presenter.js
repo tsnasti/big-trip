@@ -17,6 +17,7 @@ export default class TripPresenter {
   #infoComponent = new InfoView();
   #sortComponent = new SortView();
   #noPointsComponent = new NoPointsView();
+  #creatingFormComponent = null;
 
   #pointPresenter = new Map();
 
@@ -82,8 +83,9 @@ export default class TripPresenter {
   };
 
   #renderCreatingForm = (point) => {
-    const creatingFormComponent = new CreatingFormView(point);
+    let creatingFormComponent = new CreatingFormView(point);
     render(creatingFormComponent, this.#tripContainer);
+    creatingFormComponent = this.#creatingFormComponent;
   };
 
   #renderNoPoints = () => {
@@ -115,7 +117,7 @@ export default class TripPresenter {
     } else {
       this.#renderInfo();
       this.#renderSort();
-      this.#renderCreatingForm(this.#eventPoints[0]);
+      //this.#renderCreatingForm(this.#eventPoints[0]);
       this.#renderListPoints(this.#eventPoints);
     }
   };
