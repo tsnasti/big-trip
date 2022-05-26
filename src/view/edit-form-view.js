@@ -1,5 +1,7 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import dayjs from 'dayjs';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 import {createOffer, getDestination} from '../mock/waypoint.js';
 
 const createOfferTemplate = (offers) => {
@@ -157,10 +159,14 @@ const createEditFormTemplate = (point) => {
 };
 
 export default class EditFormView extends AbstractStatefulView {
+  #datepicker = null;
+
   constructor(point) {
     super();
     this._state = EditFormView.parsePointToState(point);
     this.#setInnerHandlers();
+    this.#setDateFromPicker();
+    this.#setDateToPicker();
   }
 
   get template() {
@@ -174,9 +180,30 @@ export default class EditFormView extends AbstractStatefulView {
     return point;
   };
 
+  removeElement = () => {
+    super.removeElement();
+
+    if (this.#datepicker) {
+      this.#datepicker.destroy();
+      this.#datepicker = null;
+    }
+  };
+
   reset = (point) => {
     this.updateElement(
       EditFormView.parsePointToState(point),
+    );
+  };
+
+  #dateFromChangeHandler = (dateFrom) => {
+    this.updateElement(
+      {dateFrom}
+    );
+  };
+
+  #dateToChangeHandler = (dateTo) => {
+    this.updateElement(
+      {dateTo}
     );
   };
 
@@ -193,6 +220,34 @@ export default class EditFormView extends AbstractStatefulView {
     this._setState({
       destination: getDestination(evt.target.value)
     });
+  };
+
+  #setDateFromPicker = () => {
+    this.#datepicker = flatpickr(
+      this.element.querySelector('#event-start-time-1'),
+      {
+        enableTime: true,
+        dateFormat: 'd/m/Y H:i',
+        // eslint-disable-next-line camelcase
+        time_24hr: true,
+        defaultDate: this._state.dateFrom,
+        onChange: this.#dateFromChangeHandler,
+      },
+    );
+  };
+
+  #setDateToPicker = () => {
+    this.#datepicker = flatpickr(
+      this.element.querySelector('#event-end-time-1'),
+      {
+        enableTime: true,
+        dateFormat: 'd/m/Y H:i',
+        // eslint-disable-next-line camelcase
+        time_24hr: true,
+        defaultDate: this._state.dateTo,
+        onChange: this.#dateToChangeHandler,
+      },
+    );
   };
 
   setFormSubmitHandler = (callback) => {
@@ -224,5 +279,7 @@ export default class EditFormView extends AbstractStatefulView {
     this.#setInnerHandlers();
     this.setFormSubmitHandler(this._callback.formSubmit);
     this.setFormClickHandler(this._callback.formClick);
+    this.#setDateFromPicker();
+    this.#setDateToPicker();
   };
 }
