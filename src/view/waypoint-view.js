@@ -18,33 +18,38 @@ const getDurationDate = (dateFrom, dateTo) => {
   const minutesDiff = dayjs(dateTo).diff(intermidateDate.add(hoursDiff,'hour'),'minute');
 
   if (monthsDiff > 0) {
-    return `${monthsDiff}M ${daysDiff}D ${hoursDiff}H ${minutesDiff}MIN`;
+    return `${monthsDiff}M ${daysDiff}D ${hoursDiff}H ${minutesDiff}M`;
   }
   if (daysDiff > 0) {
-    return `${daysDiff}D ${hoursDiff}H ${minutesDiff}MIN`;
+    return `${daysDiff}D ${hoursDiff}H ${minutesDiff}M`;
   }
   if (hoursDiff > 0) {
-    return `${hoursDiff}H ${minutesDiff}MIN`;
+    return `${hoursDiff}H ${minutesDiff}M`;
   }
   else {
-    return `${minutesDiff}MIN`;
+    return `${minutesDiff}M`;
   }
 };
 
 const createOfferTemplate = (offers) => {
   const offerTemplate = [];
-  offers.forEach((offer) => {
-    offerTemplate.push(`<li class="event__offer">
-    <span class="event__offer-title">${offer.title}</span>
-    &plus;&euro;&nbsp;
-    <span class="event__offer-price">${offer.price}</span>
-  </li>`);
-  });
+  if(offers.length !== 0) {
+    offers.forEach((offer) => {
+      offerTemplate.push(
+        `<li class="event__offer">
+          <span class="event__offer-title">${offer.title}</span>
+            &plus;&euro;&nbsp;
+          <span class="event__offer-price">${offer.price}</span>
+        </li>`);
+    });
+  }
+
   return offerTemplate.join(' ');
 };
 
-const createWaypointTemplate = (point) => {
-  const {basePrice, dateFrom, dateTo, destination, isFavorite, offers, type} = point;
+const createWaypointTemplate = (point, offers) => {
+  const {basePrice, dateFrom, dateTo, destination, isFavorite, type} = point;
+  const offersByType = offers.find((offer) => offer.type === point.type);
 
   return  `<li class="trip-events__item">
     <div class="event">
@@ -65,9 +70,9 @@ const createWaypointTemplate = (point) => {
         &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
       </p>
       <h4 class="visually-hidden">Offers:</h4>
-      <ul class="event__selected-offers">
-        ${createOfferTemplate(offers.offers)}
-      </ul>
+        <ul class="event__selected-offers">
+          ${createOfferTemplate(offersByType.offers.filter((offer) => point.offers.includes(offer.id)))}
+        </ul>
       <button class="event__favorite-btn event__favorite-btn${addFavoriteStatus(isFavorite)}" type="button">
         <span class="visually-hidden">Add to favorite</span>
         <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
@@ -83,14 +88,16 @@ const createWaypointTemplate = (point) => {
 
 export default class WaypointView extends AbstractView {
   #point = null;
+  #offers = null;
 
-  constructor(point) {
+  constructor(point, offers) {
     super();
     this.#point = point;
+    this.#offers = offers;
   }
 
   get template() {
-    return createWaypointTemplate(this.#point);
+    return createWaypointTemplate(this.#point, this.#offers);
   }
 
   setClickHandler = (callback) => {

@@ -3,37 +3,40 @@ import he from 'he';
 import dayjs from 'dayjs';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import {createOffer, getDestination, /* nameToDescription */} from '../mock/waypoint.js';
 
 const BLANK_POINT = {
-  basePrice: 0,
+  basePrice: '',
   dateFrom: dayjs().toDate(),
   dateTo: dayjs().add(7, 'day').toDate(),
   destination: {
     name: '',
-    description: [],
+    description: '',
     pictures: [],
   },
   id: 0,
   isFavorite: false,
-  offers: {
-    offers: [], type: 'flight'
-  },
+  offers: [],
   type: 'flight',
 };
 
-const createOfferTemplate = (offers) => {
+const getSelectedOffer = (offer, point) => point.includes(offer.id) ? 'checked' : '';
+
+const createOfferTemplate = (offers, pointOffers) => {
   const offerTemplate = [];
-  offers.forEach((offer) => {
-    offerTemplate.push(`<div class="event__offer-selector">
-    <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.id}" type="checkbox" name="event-offer-luggage" checked>
-    <label class="event__offer-label" for="event-offer-${offer.id}">
-      <span class="event__offer-title">${offer.title}</span>
-      &plus;&euro;&nbsp;
-      <span class="event__offer-price">${offer.price}</span>
-    </label>
-  </div>`);
-  });
+  if(offers.length !== 0) {
+    offers.forEach((offer) => {
+      offerTemplate.push(
+        `<div class="event__offer-selector">
+          <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.id}" type="checkbox" name="event-offer-luggage" ${getSelectedOffer(offer, pointOffers)}>
+          <label class="event__offer-label" for="event-offer-${offer.id}">
+            <span class="event__offer-title">${offer.title}</span>
+            &plus;&euro;&nbsp;
+            <span class="event__offer-price">${offer.price}</span>
+          </label>
+        </div>`);
+    });
+  }
+
   return offerTemplate.join(' ');
 };
 
@@ -46,16 +49,23 @@ const createPicturesTemplate = (pictures) => {
   return pictureTemplate.join(' ');
 };
 
-const createFormTemplate = (point) => {
-  const {basePrice, dateFrom, dateTo, destination, offers, type} = point;
+const createFormTemplate = (point, offers, destinations) => {
+  const {basePrice, dateFrom, dateTo, type} = point;
+  const offersByType = offers.find((offer) => offer.type === point.type);
 
   let visuallyHidden = '';
-  if (offers.offers.length === 0) {
+  if (offersByType.offers.length === 0) {
     visuallyHidden = 'visually-hidden';
   }
 
   let hide = '';
-  if (destination.pictures.length === 0 && destination.description.length === 0) {
+  const destinationByName = destinations.find((destination) => destination.name === point.destination.name);
+  if (destinationByName) {
+    if (destinationByName.pictures.length === 0 && destinationByName.description === '') {
+      hide = 'visually-hidden';
+    }
+  }
+  else {
     hide = 'visually-hidden';
   }
 
@@ -125,7 +135,7 @@ const createFormTemplate = (point) => {
           <label class="event__label  event__type-output" for="event-destination-1">
             ${type}
           </label>
-          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(destination.name)}" list="destination-list-1">
+          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${hide === 'visually-hidden' ? '' : he.encode(destinationByName.name)}" list="destination-list-1">
           <datalist id="destination-list-1">
             <option value="Amsterdam"></option>
             <option value="Geneva"></option>
@@ -157,16 +167,16 @@ const createFormTemplate = (point) => {
           <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
           <div class="event__available-offers">
-            ${createOfferTemplate(offers.offers)}
+            ${createOfferTemplate(offersByType.offers, point.offers)}
           </div>
         </section>
 
         <section class="event__section  event__section--destination ${hide}">
           <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${destination.description}</p>
+          <p class="event__destination-description">${hide === 'visually-hidden' ? '' : destinationByName.description}</p>
           <div class="event__photos-container">
             <div class="event__photos-tape">
-              ${createPicturesTemplate(destination.pictures)}
+              ${createPicturesTemplate(hide === 'visually-hidden' ? [] : destinationByName.pictures)}
             </div>
           </div>
         </section>
@@ -177,17 +187,21 @@ const createFormTemplate = (point) => {
 
 export default class CreatingFormView extends AbstractStatefulView {
   #datepicker = null;
+  #offers = null;
+  #destination = null;
 
-  constructor(point = BLANK_POINT) {
+  constructor(offers, destination) {
     super();
-    this._state = CreatingFormView.parsePointToState(point);
+    this._state = CreatingFormView.parsePointToState(BLANK_POINT);
+    this.#offers = offers;
+    this.#destination = destination;
     this.#setInnerHandlers();
     this.#setDateFromPicker();
     this.#setDateToPicker();
   }
 
   get template() {
-    return createFormTemplate(this._state);
+    return createFormTemplate(this._state, this.#offers, this.#destination);
   }
 
   static parsePointToState = (point) => ({...point,});
@@ -228,21 +242,32 @@ export default class CreatingFormView extends AbstractStatefulView {
     evt.target.type = 'event-type';
     this.updateElement({
       type: evt.target.value,
-      offers: createOffer(evt.target.value)
+      offers: []
+    });
+  };
+
+  #offersChangeHandler = () => {
+    const checkedOffersIds = Array.from(this.element.querySelectorAll('.event__offer-checkbox'))
+      .filter((element) => element.checked)
+      .map((element) => Number(element.id.replace('event-offer-','')));
+
+    this.updateElement({
+      offers: checkedOffersIds
     });
   };
 
   #destinationChangeHandler = (evt) => {
     evt.preventDefault();
+    const chekedDestinationByNeme = this.#destination.find((destination) => destination.name === evt.target.value);
     this._setState({
-      destination: getDestination(evt.target.value)
+      destination: chekedDestinationByNeme
     });
   };
 
   #priceInputHandler = (evt) => {
     evt.preventDefault();
     this._setState({
-      basePrice: evt.target.value
+      basePrice: Number(evt.target.value)
     });
   };
 
@@ -298,6 +323,9 @@ export default class CreatingFormView extends AbstractStatefulView {
     this.element.querySelector('.event__type-list').addEventListener('change', this.#typeChangeHandler);
     this.element.querySelector('.event__input--destination').addEventListener('input', this.#destinationChangeHandler);
     this.element.querySelector('.event__input--price').addEventListener('input', this.#priceInputHandler);
+    if (this.#offers.length !== 0) {
+      this.element.querySelector('.event__available-offers').addEventListener('change', this.#offersChangeHandler);
+    }
   };
 
   _restoreHandlers = () => {
