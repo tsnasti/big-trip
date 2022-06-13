@@ -2,11 +2,12 @@ import InfoView from '../view/info-view.js';
 import SortView from '../view/sort-view.js';
 import NoPointsView from '../view/no-points-view.js';
 import LoadingView from '../view/loading-view.js';
+import PointListView from '../view/point-list-view.js';
 import PointPresenter from '../presenter/point-presenter.js';
 import CreatingFormPresenter from '../presenter/creating-form-presenter.js';
 import {render, remove, RenderPosition} from '../framework/render.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
-import {SortType, comparePrice, compareDuration} from '../utils/sort.js';
+import {SortType, compareDays, comparePrice, compareDuration} from '../utils/sort.js';
 import {UserAction, UpdateType} from '../const.js';
 import {filter, FilterType} from '../utils/filter.js';
 
@@ -22,11 +23,12 @@ export default class TripPresenter {
   #offerModel = null;
   #filterModel = null;
   #destinationModel = null;
-
-  #infoComponent = new InfoView();
   #noPointsComponent = null;
   #sortComponent = null;
+  #infoComponent = null;
+
   #loadingComponent = new LoadingView();
+  #pointListComponent = new PointListView();
 
   #pointCount = null;
 
@@ -45,7 +47,7 @@ export default class TripPresenter {
     this.#offerModel = offerModel;
     this.#destinationModel = destinationModel;
     this.#filterModel = filterModel;
-    this.#creatingFormPresenter = new CreatingFormPresenter(this.#tripContainer, this.#handleViewAction, this.#offerModel, this.#destinationModel);
+    this.#creatingFormPresenter = new CreatingFormPresenter(this.#pointListComponent.element, this.#handleViewAction, this.#offerModel, this.#destinationModel);
 
     this.#pointModel.addObserver(this.#handleModelEvent);
     this.#filterModel.addObserver(this.#handleModelEvent);
@@ -57,6 +59,8 @@ export default class TripPresenter {
     const filteredPoints = filter[this.#filterType](points);
 
     switch (this.#currentSortType) {
+      case SortType.DAY:
+        return filteredPoints.sort(compareDays);
       case SortType.TIME:
         return filteredPoints.sort(compareDuration);
       case SortType.PRICE:
@@ -145,13 +149,16 @@ export default class TripPresenter {
   };
 
   #renderInfo = () => {
-    render(this.#infoComponent, this.#headerContainer, RenderPosition.BEFOREBEGIN);
+    const points = this.#pointModel.points;
+    const offers = this.#offerModel.offers;
+    this.#infoComponent = new InfoView(points, offers);
+    render(this.#infoComponent, this.#headerContainer, RenderPosition.AFTERBEGIN);
   };
 
   #renderSort = () => {
     this.#sortComponent = new SortView(this.#currentSortType);
     this.#sortComponent.setSortTypeChangeHandler(this.#handleSortTypeChange);
-    render(this.#sortComponent, this.#tripContainer, RenderPosition.BEFOREBEGIN);
+    render(this.#sortComponent, this.#tripContainer, RenderPosition.AFTERBEGIN);
   };
 
   #renderNoPoints = () => {
@@ -164,7 +171,7 @@ export default class TripPresenter {
   };
 
   #renderPoint = (point) => {
-    const pointPresenter = new PointPresenter(this.#tripContainer, this.#handleViewAction, this.#handleModeChange, this.#offerModel, this.#destinationModel);
+    const pointPresenter = new PointPresenter(this.#pointListComponent.element, this.#handleViewAction, this.#handleModeChange, this.#offerModel, this.#destinationModel);
     pointPresenter.init(point);
     this.#pointPresenter.set(point.id, pointPresenter);
   };
@@ -185,6 +192,7 @@ export default class TripPresenter {
 
     remove(this.#sortComponent);
     remove(this.#loadingComponent);
+    remove(this.#infoComponent);
 
     if (this.#noPointsComponent) {
       remove(this.#noPointsComponent);
@@ -205,6 +213,7 @@ export default class TripPresenter {
       this.#renderNoPoints();
 
     } else {
+      render(this.#pointListComponent, this.#tripContainer);
       this.#renderInfo();
       this.#renderSort();
       this.#renderListPoints(this.points);

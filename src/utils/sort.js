@@ -10,6 +10,8 @@ const SortType = {
 
 export {SortType};
 
+const compareDays = (pointA, pointB) =>  dayjs(pointA.dateFrom) - dayjs(pointB.dateFrom);
+
 const comparePrice = (pointA, pointB) => pointB.basePrice - pointA.basePrice;
 
 const compareDuration = (pointA, pointB) => {
@@ -18,4 +20,4 @@ const compareDuration = (pointA, pointB) => {
   return minutesDiffB - minutesDiffA;
 };
 
-export {comparePrice, compareDuration};
+export {compareDays, comparePrice, compareDuration};

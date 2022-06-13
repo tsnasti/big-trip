@@ -12,7 +12,7 @@ const AUTHORIZATION = 'Basic rPo5kLmea6932nF';
 const END_POINT = 'https://17.ecmascript.pages.academy/big-trip';
 
 const tripHeaderElement = document.querySelector('.trip-main');
-const tripFilterElement = tripHeaderElement.querySelector('.trip-controls__filters');
+const tripFilterElement = document.querySelector('.trip-main__trip-controls');
 const newEventButton = tripHeaderElement.querySelector('.trip-main__event-add-btn');
 
 const tripMainElement = document.querySelector('.page-main');
@@ -23,7 +23,7 @@ const offerModel = new OfferModel(new OffersApiService(END_POINT, AUTHORIZATION)
 const destinationModel = new DestinationModel(new DestinationsApiService(END_POINT, AUTHORIZATION));
 const filterModel = new FilterModel();
 
-const tripPresenter = new TripPresenter(tripFilterElement, tripEventsElement, pointModel, filterModel, offerModel, destinationModel);
+const tripPresenter = new TripPresenter(tripHeaderElement, tripEventsElement, pointModel, filterModel, offerModel, destinationModel);
 const filterPresenter = new FilterPresenter(tripFilterElement, filterModel, pointModel);
 
 const handleNewEventFormClose = () => {
