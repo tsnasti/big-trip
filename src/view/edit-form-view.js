@@ -41,6 +41,16 @@ const createOfferTemplate = (offers, pointOffers, isDisabled) => {
   return offerTemplate.join(' ');
 };
 
+const createOptionNameTemplate = (destinations) => {
+  const nameTemplate = [];
+  destinations.forEach((destination) => {
+    nameTemplate.push(
+      `<option value="${destination.name}"></option>`
+    );
+  });
+  return nameTemplate.join(' ');
+};
+
 const createPicturesTemplate = (pictures) => {
   const pictureTemplate = [];
   pictures.forEach((picture) => {
@@ -56,7 +66,7 @@ const createEditFormTemplate = (point, offers, destinations) => {
   const offersByType = getOffersByType(offers, point.type);
 
   let visuallyHidden = '';
-  if (offersByType.length === 0) {
+  if (offersByType.offers.length === 0) {
     visuallyHidden = 'visually-hidden';
   }
 
@@ -131,11 +141,9 @@ const createEditFormTemplate = (point, offers, destinations) => {
           <label class="event__label  event__type-output" for="event-destination-1">
             ${type}
           </label>
-          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(destinationByName.name)}" list="destination-list-1" ${isDisabled ? 'disabled' : ''}>
+          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(destinationByName.name)}" list="destination-list-1" autocomplete="off" ${isDisabled ? 'disabled' : ''}>
           <datalist id="destination-list-1">
-            <option value="Amsterdam"></option>
-            <option value="Geneva"></option>
-            <option value="Chamonix"></option>
+            ${createOptionNameTemplate(destinations)}
           </datalist>
         </div>
 
@@ -233,15 +241,21 @@ export default class EditFormView extends AbstractStatefulView {
   };
 
   #dateFromChangeHandler = (dateFrom) => {
-    this.updateElement(
-      {dateFrom}
-    );
+    dateFrom = dayjs(dateFrom).toISOString();
+    if (this._state.dateTo > dateFrom) {
+      this.updateElement(
+        {dateFrom}
+      );
+    }
   };
 
   #dateToChangeHandler = (dateTo) => {
-    this.updateElement(
-      {dateTo}
-    );
+    dateTo = dayjs(dateTo).toISOString();
+    if (dateTo > this._state.dateFrom) {
+      this.updateElement(
+        {dateTo}
+      );
+    }
   };
 
   #typeChangeHandler = (evt) => {

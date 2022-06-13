@@ -9,6 +9,8 @@ const addFavoriteStatus = (isFavorite) => {
   }
 };
 
+const addFormatDuration = (time) => time.toString().padStart(2,'0');
+
 const getDurationDate = (dateFrom, dateTo) => {
   const monthsDiff = dayjs(dateTo).diff(dateFrom,'month');
   let intermidateDate = dayjs(dateFrom).add(monthsDiff,'month');
@@ -18,16 +20,16 @@ const getDurationDate = (dateFrom, dateTo) => {
   const minutesDiff = dayjs(dateTo).diff(intermidateDate.add(hoursDiff,'hour'),'minute');
 
   if (monthsDiff > 0) {
-    return `${monthsDiff}M ${daysDiff}D ${hoursDiff}H ${minutesDiff}M`;
+    return `${addFormatDuration(monthsDiff)}M ${addFormatDuration(daysDiff)}D ${addFormatDuration(hoursDiff)}H ${addFormatDuration(minutesDiff)}M`;
   }
-  if (daysDiff > 0) {
-    return `${daysDiff}D ${hoursDiff}H ${minutesDiff}M`;
+  if ( daysDiff > 0) {
+    return `${addFormatDuration(daysDiff)}D ${addFormatDuration(hoursDiff)}H ${addFormatDuration(minutesDiff)}M`;
   }
   if (hoursDiff > 0) {
-    return `${hoursDiff}H ${minutesDiff}M`;
+    return `${addFormatDuration(hoursDiff)}H ${addFormatDuration(minutesDiff)}M`;
   }
   else {
-    return `${minutesDiff}M`;
+    return `${addFormatDuration(minutesDiff)}M`;
   }
 };
 

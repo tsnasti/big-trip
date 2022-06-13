@@ -40,6 +40,16 @@ const createOfferTemplate = (offers, pointOffers, isDisabled) => {
   return offerTemplate.join(' ');
 };
 
+const createOptionNameTemplate = (destinations) => {
+  const nameTemplate = [];
+  destinations.forEach((destination) => {
+    nameTemplate.push(
+      `<option value="${destination.name}"></option>`
+    );
+  });
+  return nameTemplate.join(' ');
+};
+
 const createPicturesTemplate = (pictures) => {
   const pictureTemplate = [];
   pictures.forEach((picture) => {
@@ -135,11 +145,9 @@ const createFormTemplate = (point, offers, destinations) => {
           <label class="event__label  event__type-output" for="event-destination-1">
             ${type}
           </label>
-          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${hide === 'visually-hidden' ? '' : he.encode(destinationByName.name)}" list="destination-list-1" ${isDisabled ? 'disabled' : ''}>
+          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${hide === 'visually-hidden' ? '' : he.encode(destinationByName.name)}" list="destination-list-1" autocomplete="off" ${isDisabled ? 'disabled' : ''}>
           <datalist id="destination-list-1">
-            <option value="Amsterdam"></option>
-            <option value="Geneva"></option>
-            <option value="Chamonix"></option>
+            ${createOptionNameTemplate(destinations)}
           </datalist>
         </div>
 
