@@ -1,14 +1,14 @@
 import dayjs from 'dayjs';
 
-const isPointPast = (date) => dayjs().isAfter(date, 'day');
-const isPointFuture = (date) => dayjs().isBefore(date, 'day');
-const isPointCurrent = (dateFrom, dateTo) => isPointPast(dateFrom) && isPointFuture(dateTo);
-
 const FilterType = {
   EVERYTHING: 'everything',
   FUTURE: 'future',
   PAST: 'past'
 };
+
+const isPointPast = (date) => dayjs().isAfter(date, 'day');
+const isPointFuture = (date) => dayjs().isBefore(date, 'day');
+const isPointCurrent = (dateFrom, dateTo) => isPointPast(dateFrom) && isPointFuture(dateTo);
 
 const filter = {
   [FilterType.EVERYTHING]: (points) => points,

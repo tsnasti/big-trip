@@ -28,16 +28,14 @@ const getDurationDate = (dateFrom, dateTo) => {
   if (hoursDiff > 0) {
     return `${addFormatDuration(hoursDiff)}H ${addFormatDuration(minutesDiff)}M`;
   }
-  else {
-    return `${addFormatDuration(minutesDiff)}M`;
-  }
+  return `${addFormatDuration(minutesDiff)}M`;
 };
 
 const createOfferTemplate = (offers) => {
-  const offerTemplate = [];
+  const offersTemplate = [];
   if(offers.length !== 0) {
     offers.forEach((offer) => {
-      offerTemplate.push(
+      offersTemplate.push(
         `<li class="event__offer">
           <span class="event__offer-title">${offer.title}</span>
             &plus;&euro;&nbsp;
@@ -46,7 +44,7 @@ const createOfferTemplate = (offers) => {
     });
   }
 
-  return offerTemplate.join(' ');
+  return offersTemplate.join(' ');
 };
 
 const createWaypointTemplate = (point, offers) => {
@@ -72,9 +70,9 @@ const createWaypointTemplate = (point, offers) => {
         &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
       </p>
       <h4 class="visually-hidden">Offers:</h4>
-        <ul class="event__selected-offers">
-          ${createOfferTemplate(offersByType.offers.filter((offer) => point.offers.includes(offer.id)))}
-        </ul>
+      <ul class="event__selected-offers">
+        ${createOfferTemplate(offersByType.offers.filter((offer) => point.offers.includes(offer.id)))}
+      </ul>
       <button class="event__favorite-btn event__favorite-btn${addFavoriteStatus(isFavorite)}" type="button">
         <span class="visually-hidden">Add to favorite</span>
         <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">

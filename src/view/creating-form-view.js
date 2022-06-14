@@ -1,31 +1,17 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import {BLANK_POINT} from '../const.js';
 import he from 'he';
 import dayjs from 'dayjs';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
-const BLANK_POINT = {
-  basePrice: '',
-  dateFrom: dayjs().toDate(),
-  dateTo: dayjs().add(7, 'day').toDate(),
-  destination: {
-    name: '',
-    description: '',
-    pictures: [],
-  },
-  id: 0,
-  isFavorite: false,
-  offers: [],
-  type: 'flight',
-};
-
 const getSelectedOffer = (offer, point) => point.includes(offer.id) ? 'checked' : '';
 
 const createOfferTemplate = (offers, pointOffers, isDisabled) => {
-  const offerTemplate = [];
+  const offersTemplate = [];
   if(offers.length !== 0) {
     offers.forEach((offer) => {
-      offerTemplate.push(
+      offersTemplate.push(
         `<div class="event__offer-selector">
           <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.id}" type="checkbox" name="event-offer-luggage" ${getSelectedOffer(offer, pointOffers)} ${isDisabled ? 'disabled' : ''}>
           <label class="event__offer-label" for="event-offer-${offer.id}">
@@ -37,31 +23,32 @@ const createOfferTemplate = (offers, pointOffers, isDisabled) => {
     });
   }
 
-  return offerTemplate.join(' ');
+  return offersTemplate.join(' ');
 };
 
 const createOptionNameTemplate = (destinations) => {
-  const nameTemplate = [];
+  const namesTemplate = [];
   destinations.forEach((destination) => {
-    nameTemplate.push(
+    namesTemplate.push(
       `<option value="${destination.name}"></option>`
     );
   });
-  return nameTemplate.join(' ');
+  return namesTemplate.join(' ');
 };
 
 const createPicturesTemplate = (pictures) => {
-  const pictureTemplate = [];
+  const picturesTemplate = [];
   pictures.forEach((picture) => {
-    pictureTemplate.push(`
+    picturesTemplate.push(`
       <img class="event__photo" src="${picture.src}" alt="Event photo">`);
   });
-  return pictureTemplate.join(' ');
+  return picturesTemplate.join(' ');
 };
 
 const createFormTemplate = (point, offers, destinations) => {
   const {basePrice, dateFrom, dateTo, type, isDisabled, isSaving} = point;
   const offersByType = offers.find((offer) => offer.type === point.type);
+  const destinationByName = destinations.find((destination) => destination.name === point.destination.name);
 
   let visuallyHidden = '';
   if (offersByType.offers.length === 0) {
@@ -69,7 +56,6 @@ const createFormTemplate = (point, offers, destinations) => {
   }
 
   let hide = '';
-  const destinationByName = destinations.find((destination) => destination.name === point.destination.name);
   if (destinationByName) {
     if (destinationByName.pictures.length === 0 && destinationByName.description === '') {
       hide = 'visually-hidden';
@@ -212,18 +198,6 @@ export default class CreatingFormView extends AbstractStatefulView {
     return createFormTemplate(this._state, this.#offers, this.#destination);
   }
 
-  static parsePointToState = (point) => ({...point,
-    isDisabled: false,
-    isSaving: false,
-  });
-
-  static parseStateToPoint = (state) => {
-    const point = {...state};
-    delete point.isDisabled;
-    delete point.isSaving;
-    return point;
-  };
-
   removeElement = () => {
     super.removeElement();
 
@@ -237,6 +211,24 @@ export default class CreatingFormView extends AbstractStatefulView {
     this.updateElement(
       CreatingFormView.parsePointToState(point),
     );
+  };
+
+  setCreatingFormSubmitHandler = (callback) => {
+    this._callback.creatingFormSubmit = callback;
+    this.element.querySelector('form').addEventListener('submit', this.#creatingFormSubmitHandler);
+  };
+
+  setFormDeleteHandler = (callback) => {
+    this._callback.formDelete = callback;
+    this.element.querySelector('.event__reset-btn').addEventListener('click', this.#deleteFormHandler);
+  };
+
+  _restoreHandlers = () => {
+    this.#setInnerHandlers();
+    this.setCreatingFormSubmitHandler(this._callback.creatingFormSubmit);
+    this.setFormDeleteHandler(this._callback.formDelete);
+    this.#setDateFromPicker();
+    this.#setDateToPicker();
   };
 
   #dateFromChangeHandler = (dateFrom) => {
@@ -290,8 +282,7 @@ export default class CreatingFormView extends AbstractStatefulView {
       {
         enableTime: true,
         dateFormat: 'd/m/Y H:i',
-        // eslint-disable-next-line camelcase
-        time_24hr: true,
+        ['time_24hr']: true,
         defaultDate: this._state.dateFrom,
         onChange: this.#dateFromChangeHandler,
       },
@@ -304,27 +295,16 @@ export default class CreatingFormView extends AbstractStatefulView {
       {
         enableTime: true,
         dateFormat: 'd/m/Y H:i',
-        // eslint-disable-next-line camelcase
-        time_24hr: true,
+        ['time_24hr']: true,
         defaultDate: this._state.dateTo,
         onChange: this.#dateToChangeHandler,
       },
     );
   };
 
-  setCreatingFormSubmitHandler = (callback) => {
-    this._callback.creatingFormSubmit = callback;
-    this.element.querySelector('form').addEventListener('submit', this.#creatingFormSubmitHandler);
-  };
-
   #creatingFormSubmitHandler = (evt) => {
     evt.preventDefault();
     this._callback.creatingFormSubmit(CreatingFormView.parsePointToState(this._state));
-  };
-
-  setFormDeleteHandler = (callback) => {
-    this._callback.formDelete = callback;
-    this.element.querySelector('.event__reset-btn').addEventListener('click', this.#deleteFormHandler);
   };
 
   #deleteFormHandler = (evt) => {
@@ -341,11 +321,15 @@ export default class CreatingFormView extends AbstractStatefulView {
     }
   };
 
-  _restoreHandlers = () => {
-    this.#setInnerHandlers();
-    this.setCreatingFormSubmitHandler(this._callback.creatingFormSubmit);
-    this.setFormDeleteHandler(this._callback.formDelete);
-    this.#setDateFromPicker();
-    this.#setDateToPicker();
+  static parsePointToState = (point) => ({...point,
+    isDisabled: false,
+    isSaving: false,
+  });
+
+  static parseStateToPoint = (state) => {
+    const point = {...state};
+    delete point.isDisabled;
+    delete point.isSaving;
+    return point;
   };
 }

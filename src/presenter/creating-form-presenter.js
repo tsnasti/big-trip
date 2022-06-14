@@ -11,7 +11,7 @@ export default class CreatingFormPresenter {
   #destinationModel = null;
 
   #offers = [];
-  #destination = [];
+  #destinations = [];
 
   constructor(pointListContainer, changeData, offerModel, destinationModel) {
     this.#pointListContainer = pointListContainer;
@@ -23,13 +23,13 @@ export default class CreatingFormPresenter {
   init = (callback) => {
     this.#destroyCallback = callback;
     this.#offers = this.#offerModel.offers;
-    this.#destination = this.#destinationModel.destination;
+    this.#destinations = this.#destinationModel.destination;
 
     if (this.#creatingFormComponent !== null) {
       return;
     }
 
-    this.#creatingFormComponent = new CreatingFormView(this.#offers, this.#destination);
+    this.#creatingFormComponent = new CreatingFormView(this.#offers, this.#destinations);
     this.#creatingFormComponent.setCreatingFormSubmitHandler(this.#handleFormSubmit);
     this.#creatingFormComponent.setFormDeleteHandler(this.#handleDeleteClick);
 
