@@ -1,32 +1,18 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import {BLANK_POINT} from '../const.js';
 import he from 'he';
 import dayjs from 'dayjs';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
-const BLANK_POINT = {
-  basePrice: '',
-  dateFrom: dayjs().toDate(),
-  dateTo: dayjs().add(7, 'day').toDate(),
-  destination: {
-    name: '',
-    description: '',
-    pictures: [],
-  },
-  id: 0,
-  isFavorite: false,
-  offers: [],
-  type: 'flight',
-};
-
 const getSelectedOffer = (offer, point) => point.includes(offer.id) ? 'checked' : '';
 const getOffersByType = (offers, type) => offers.find((offer) => offer.type === type);
 
 const createOfferTemplate = (offers, pointOffers, isDisabled) => {
-  const offerTemplate = [];
+  const offersTemplate = [];
   if(offers.length !== 0) {
     offers.forEach((offer) => {
-      offerTemplate.push(
+      offersTemplate.push(
         `<div class="event__offer-selector">
           <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.id}" type="checkbox" name="event-offer-luggage" ${getSelectedOffer(offer, pointOffers)} ${isDisabled ? 'disabled' : ''}>
           <label class="event__offer-label" for="event-offer-${offer.id}">
@@ -38,26 +24,26 @@ const createOfferTemplate = (offers, pointOffers, isDisabled) => {
     });
   }
 
-  return offerTemplate.join(' ');
+  return offersTemplate.join(' ');
 };
 
 const createOptionNameTemplate = (destinations) => {
-  const nameTemplate = [];
+  const namesTemplate = [];
   destinations.forEach((destination) => {
-    nameTemplate.push(
+    namesTemplate.push(
       `<option value="${destination.name}"></option>`
     );
   });
-  return nameTemplate.join(' ');
+  return namesTemplate.join(' ');
 };
 
 const createPicturesTemplate = (pictures) => {
-  const pictureTemplate = [];
+  const picturesTemplate = [];
   pictures.forEach((picture) => {
-    pictureTemplate.push(`
+    picturesTemplate.push(`
       <img class="event__photo" src="${picture.src}" alt="Event photo">`);
   });
-  return pictureTemplate.join(' ');
+  return picturesTemplate.join(' ');
 };
 
 const createEditFormTemplate = (point, offers, destinations) => {
@@ -211,20 +197,6 @@ export default class EditFormView extends AbstractStatefulView {
     return createEditFormTemplate(this._state, this.#offers, this.#destination);
   }
 
-  static parsePointToState = (point) => ({...point,
-    isDisabled: false,
-    isSaving: false,
-    isDeleting: false,
-  });
-
-  static parseStateToPoint = (state) => {
-    const point = {...state};
-    delete point.isDisabled;
-    delete point.isSaving;
-    delete point.isDeleting;
-    return point;
-  };
-
   removeElement = () => {
     super.removeElement();
 
@@ -238,6 +210,30 @@ export default class EditFormView extends AbstractStatefulView {
     this.updateElement(
       EditFormView.parsePointToState(point),
     );
+  };
+
+  setFormSubmitHandler = (callback) => {
+    this._callback.formSubmit = callback;
+    this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
+  };
+
+  setFormClickHandler = (callback) => {
+    this._callback.formClick = callback;
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#clickFormHandler);
+  };
+
+  setFormDeleteHandler = (callback) => {
+    this._callback.formDelete = callback;
+    this.element.querySelector('.event__reset-btn').addEventListener('click', this.#deleteFormHandler);
+  };
+
+  _restoreHandlers = () => {
+    this.#setInnerHandlers();
+    this.setFormSubmitHandler(this._callback.formSubmit);
+    this.setFormClickHandler(this._callback.formClick);
+    this.setFormDeleteHandler(this._callback.formDelete);
+    this.#setDateFromPicker();
+    this.#setDateToPicker();
   };
 
   #dateFromChangeHandler = (dateFrom) => {
@@ -297,8 +293,7 @@ export default class EditFormView extends AbstractStatefulView {
       {
         enableTime: true,
         dateFormat: 'd/m/Y H:i',
-        // eslint-disable-next-line camelcase
-        time_24hr: true,
+        ['time_24hr']: true,
         defaultDate: this._state.dateFrom,
         onChange: this.#dateFromChangeHandler,
       },
@@ -311,17 +306,11 @@ export default class EditFormView extends AbstractStatefulView {
       {
         enableTime: true,
         dateFormat: 'd/m/Y H:i',
-        // eslint-disable-next-line camelcase
-        time_24hr: true,
+        ['time_24hr']: true,
         defaultDate: this._state.dateTo,
         onChange: this.#dateToChangeHandler,
       },
     );
-  };
-
-  setFormSubmitHandler = (callback) => {
-    this._callback.formSubmit = callback;
-    this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
   };
 
   #formSubmitHandler = (evt) => {
@@ -329,19 +318,9 @@ export default class EditFormView extends AbstractStatefulView {
     this._callback.formSubmit(EditFormView.parsePointToState(this._state));
   };
 
-  setFormClickHandler = (callback) => {
-    this._callback.formClick = callback;
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#clickFormHandler);
-  };
-
   #clickFormHandler = (evt) => {
     evt.preventDefault();
     this._callback.formClick(EditFormView.parsePointToState(this._state));
-  };
-
-  setFormDeleteHandler = (callback) => {
-    this._callback.formDelete = callback;
-    this.element.querySelector('.event__reset-btn').addEventListener('click', this.#deleteFormHandler);
   };
 
   #deleteFormHandler = (evt) => {
@@ -358,12 +337,17 @@ export default class EditFormView extends AbstractStatefulView {
     }
   };
 
-  _restoreHandlers = () => {
-    this.#setInnerHandlers();
-    this.setFormSubmitHandler(this._callback.formSubmit);
-    this.setFormClickHandler(this._callback.formClick);
-    this.setFormDeleteHandler(this._callback.formDelete);
-    this.#setDateFromPicker();
-    this.#setDateToPicker();
+  static parsePointToState = (point) => ({...point,
+    isDisabled: false,
+    isSaving: false,
+    isDeleting: false,
+  });
+
+  static parseStateToPoint = (state) => {
+    const point = {...state};
+    delete point.isDisabled;
+    delete point.isSaving;
+    delete point.isDeleting;
+    return point;
   };
 }
