@@ -28,4 +28,6 @@ const UpdateType = {
   INIT: 'INIT',
 };
 
-export {BLANK_POINT, UserAction, UpdateType};
+const isEscapeKey = (evt) => evt.key === 'Escape' || evt.key === 'Esc';
+
+export {BLANK_POINT, UserAction, UpdateType, isEscapeKey};

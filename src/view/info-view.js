@@ -1,15 +1,13 @@
 import AbstractView from '../framework/view/abstract-view.js';
 import dayjs from 'dayjs';
 
+const CITIES_COUNT = 3;
+
 const addPointName = (points) => {
-  if (points.length > 3) {
+  if (points.length >= CITIES_COUNT) {
     return '... &mdash';
   }
-  if (points.length <= 2) {
-    return '';
-  }
-  return points[1].destination.name;
-
+  return '';
 };
 
 const getTotalCostValue = (points, offers) => {
