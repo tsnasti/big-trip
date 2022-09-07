@@ -1,4 +1,5 @@
 {
+  "homepage": "https://tsnasti.github.io/1924187-big-trip-17/",
   "name": "big-trip",
   "version": "17.0.0",
   "private": true,
@@ -13,11 +14,14 @@
   "scripts": {
     "lint": "eslint src/",
     "build": "webpack --mode production",
-    "start": "webpack serve --mode development --open"
+    "start": "webpack serve --mode development --open",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build -m 'Automatically update gh-pages [skip ci]'"
   },
   "devDependencies": {
     "eslint": "8.13.0",
-    "eslint-config-htmlacademy": "5.1.2"
+    "eslint-config-htmlacademy": "5.1.2",
+    "gh-pages": "4.0.0"
   },
   "engines": {
     "node": "16"
