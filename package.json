@@ -16,7 +16,7 @@
     "build": "webpack --mode production",
     "start": "webpack serve --mode development --open",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build -m 'Automatically update gh-pages [skip ci]'"
+    "deploy": "gh-pages -d public -m 'Automatically update gh-pages [skip ci]'"
   },
   "devDependencies": {
     "eslint": "8.13.0",
